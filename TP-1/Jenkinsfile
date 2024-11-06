@@ -52,6 +52,15 @@ pipeline {
         }
       }
     }
+    
+    stage('Clean up existing containers') {
+        steps {
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                sh 'docker stop backend frontend'
+                sh 'docker rm backend frontend'
+            }
+        }
+    }
 
     stage('Deploy backend container') {
       steps {
@@ -59,13 +68,11 @@ pipeline {
         sh 'docker run -d --net=efrei -e POSTGRES_PASSWORD=postgres --name backend efrei2023/backend:1'
       }
     }
+    
     stage('Deploy frontend container') {
       steps {
         echo "Run  frontend container"
         sh 'docker run -d --net=efrei  -p 8081:80 -e POSTGRES_PASSWORD=postgres --name frontend efrei2023/frontend:1'
-        input message: 'Done using the app? Click "Proceed" to continue.'
-        sh 'docker stop backend frontend'
-        sh 'docker rm backend frontend'
       }
     }
   }
